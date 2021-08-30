@@ -1,8 +1,12 @@
+import os,sys
+import pathlib
 from lib.spark import SparkWrapper
 from lib.data_transformation import DataTransformation
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 # Read CSV training data from Kaggle Titanic challenge
-DATA_PATH = "/mnt/c/Python//kaggle_titanic/data/train.csv"
+DATA_PATH = f"kaggle_titanic/data/train.csv"
 
 with SparkWrapper("titanic_ml_pipeline") as sw:
     data = sw.read_csv(path=DATA_PATH,header=True)
