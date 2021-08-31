@@ -1,3 +1,4 @@
+from numpy import arange
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import col
 from pyspark.ml.feature import StringIndexer, VectorAssembler
@@ -8,48 +9,67 @@ class DataTransformation(DataFrame):
     def __init__(self, df):
         super(self.__class__, self).__init__(df._jdf, df.sql_ctx)
 
-    def prepare_data_for_training(self):
-        df = self.select(
-                            col("Survived").cast("float"),
-                            col("Pclass").cast("float"),
-                            col("Sex"),
-                            col("Age").cast("float"),
-                            col("Fare").cast("float"),
-                            col("Embarked")
-                        )
-        df = df.replace("?", None) \
-            .dropna(how="any")
-        # Encode two feature columns as numbers
-        df = StringIndexer(
-                            inputCol="Sex", 
-                            outputCol="Gender", 
-                            handleInvalid="keep") \
-                            .fit(df) \
-                            .transform(df)
-        df = StringIndexer(
-                            inputCol="Embarked", 
-                            outputCol="Boarded", 
-                            handleInvalid="keep") \
-                            .fit(df) \
-                            .transform(df)
-        
-        # Drop unnecessary columns
-        df = df.drop("Sex")
-        df = df.drop("Embarked")
+    def prepare_data_for_training(
+                                self, 
+                                train_percentage: float
+                                ):
+        result = ()
 
-        # Assemble all the features with VectorAssembler
-        required_features = ["Pclass",
-                            "Age",
-                            "Fare",
-                            "Gender",
-                            "Boarded"
-                        ]
-        assembler = VectorAssembler(
-                                    inputCols=required_features,
-                                    outputCol="features"
-                                )
+        if train_percentage > 0.0 and train_percentage <= 0.9:
+            df = self.select(
+                                col("Survived").cast("float"),
+                                col("Pclass").cast("float"),
+                                col("Sex"),
+                                col("Age").cast("float"),
+                                col("Fare").cast("float"),
+                                col("Embarked")
+                            )
+            df = df.replace("?", None) \
+                .dropna(how="any")
+            # Encode two feature columns as numbers
+            df = StringIndexer(
+                                inputCol="Sex", 
+                                outputCol="Gender", 
+                                handleInvalid="keep") \
+                                .fit(df) \
+                                .transform(df)
+            df = StringIndexer(
+                                inputCol="Embarked", 
+                                outputCol="Boarded", 
+                                handleInvalid="keep") \
+                                .fit(df) \
+                                .transform(df)
+            
+            # Drop unnecessary columns
+            df = df.drop("Sex")
+            df = df.drop("Embarked")
+
+            # Assemble all the features with VectorAssembler
+            required_features = ["Pclass",
+                                "Age",
+                                "Fare",
+                                "Gender",
+                                "Boarded"
+                            ]
+            assembler = VectorAssembler(
+                                        inputCols=required_features,
+                                        outputCol="features"
+                                    )
+            
+            result = assembler.transform(df)\
+                .randomSplit(
+                            [train_percentage,
+                            1 - train_percentage]
+                            )
+            print(
+                f"Training data count: {result[0].count()}\n"
+                f"Test data count: {result[1].count()}"
+                )
+        else:
+            print("Training percentage is not in (0, 0.9] range!")
+        return result
+
         
-        return assembler.transform(df)
     
     def prepare_model(self, training_data):
         # Use Random Forest Classifier as an estimator
