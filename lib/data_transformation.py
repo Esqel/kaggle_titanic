@@ -11,9 +11,10 @@ REQUIRED_FEATURES = [
 ]
 
 class DataTransformation():
-    def prepare_data(self, df: DataFrame, data_type: str):
+    def prepare_data(self, df: DataFrame, data_type: str) -> DataFrame:
         if data_type == "train":
             df = df.select(
+                col("PassengerId").cast("int"),
                 col("Survived").cast("int"),
                 col("Pclass").cast("int"),
                 col("Sex"),
@@ -23,6 +24,7 @@ class DataTransformation():
             )
         elif data_type == "test":
             df = df.select(
+                col("PassengerId").cast("int"),
                 col("Pclass").cast("int"),
                 col("Sex"),
                 col("Age").cast("int"),

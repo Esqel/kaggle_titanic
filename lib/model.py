@@ -3,7 +3,7 @@ from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 class Model():
-    def prepare_model(self, train_df):
+    def prepare_model(self, train_df) -> RandomForestClassifier:
         # Use Random Forest Classifier as an estimator
         rf = RandomForestClassifier(
             labelCol="Survived", 
@@ -12,7 +12,7 @@ class Model():
         )
         return rf.fit(train_df)
 
-    def evaluate_model(self, pred_df):
+    def evaluate_model(self, pred_df) -> MulticlassClassificationEvaluator:
         evaluator = MulticlassClassificationEvaluator(
             labelCol="Survived", 
             predictionCol="prediction", 
