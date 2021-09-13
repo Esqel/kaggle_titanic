@@ -10,26 +10,29 @@ REQUIRED_FEATURES = [
     "Boarded"
 ]
 
+FEATURE_MAPPING = {
+    "PassengerId": "int",
+    "Survived": "int",
+    "Pclass": "int",
+    "Sex": "string",
+    "Age": "int",
+    "Fare": "float",
+    "Embarked": "string"
+}
+
 class DataTransformation():
     def prepare_data(self, df: DataFrame, data_type: str) -> DataFrame:
         if data_type == "train":
             df = df.select(
-                col("PassengerId").cast("int"),
-                col("Survived").cast("int"),
-                col("Pclass").cast("int"),
-                col("Sex"),
-                col("Age").cast("int"),
-                col("Fare").cast("float"),
-                col("Embarked")
+                [col(e[0]).cast(e[1]) for e in FEATURE_MAPPING.items()]
             )
         elif data_type == "test":
             df = df.select(
-                col("PassengerId").cast("int"),
-                col("Pclass").cast("int"),
-                col("Sex"),
-                col("Age").cast("int"),
-                col("Fare").cast("float"),
-                col("Embarked")
+                [
+                    col(e[0]).cast(e[1]) 
+                    for e in FEATURE_MAPPING.items() 
+                    if e[0] != "Survived"
+                ]
             )
         else:
             print("Wrong data type chosen!")
